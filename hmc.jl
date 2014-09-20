@@ -9,7 +9,7 @@ using Gadfly
 function hmc(u::Function, ∇u::Function, x0::Vector{Float64}, N::Int, ϵ::Float64, L::Int)
     d = length(x0)
     # allocate sampels' holder
-    samples = Array(typeof(x0), n_samples)
+    samples = Array(typeof(x0), N)
     # set the current sate to the initail state
     x = x0
     for n in 1:N
@@ -47,7 +47,7 @@ let
     L = 10
     # initial state
     x0 = [0.0, 0.0]
-    for ϵ in [0.05, 0.1, 0.5, 1.0]
+    for ϵ in [0.01, 0.05, 0.1, 0.5]
         srand(0)
         samples = hmc(ln_normal, ∇ln_normal, x0, 1000, ϵ, L)
         is = Float64[]
