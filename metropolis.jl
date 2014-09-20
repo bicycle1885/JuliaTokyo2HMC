@@ -2,23 +2,23 @@ using Gadfly
 
 # p: (unnormalized) probability density function
 # x0: initial state
-# n_samples: the number of required samples
+# N: the number of required samples
 # ϵ: step size
-function metropolis(p::Function, x0::Vector{Float64}, n_samples::Int, ϵ::Float64)
+function metropolis(p::Function, x0::Vector{Float64}, N::Int, ϵ::Float64)
     d = length(x0)
     # allocate samples' holder
-    samples = Array(typeof(x0), n_samples)
+    samples = Array(typeof(x0), N)
     # set the current state to the initial state
     x = x0
-    for i in 1:n_samples
+    for n in 1:N
         # generate a candidate sample from
         # the proposal distribution (normal distribution)
         x_star = randn(d) * ϵ .+ x
         if rand() < min(1.0, p(x_star) / p(x))
-            # accept the sample
+            # accept the proposal
             x = x_star
         end
-        samples[i] = x
+        samples[n] = x
     end
     samples
 end

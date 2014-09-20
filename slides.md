@@ -94,7 +94,7 @@ $$ P(X\_{n+1} = x | X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = 
 1. 初期状態 \\(\mathbf{x^{(0)}}\\) を決める
 2. 提案分布 \\(q(\mathbf{x^{\star}}|\mathbf{x^{(\tau)}})\\) から新たな点 \\(\mathbf{x^{\star}}\\) をとる
 3. 確率 \\(\alpha = \min\left(1, \frac{\tilde{p}(\mathbf{x^{\star}}) q(\mathbf{x^{(\tau)}|x^{\star}})}{\tilde{p}(\mathbf{x^{(\tau)}})q(\mathbf{x^{\star}|x^{(\tau)}})}\right)\\) で \\(\mathbf{x^{\star}}\\) をサンプルとして受容し、そうでなければ棄却する
-4. 受容された場合、\\(x^{(\tau+1)} \gets x^{\star}\\) と設定し、棄却された場合、 \\(x^{(\tau+1)} \gets x^{(\tau)}\\) と設定する
+4. 受容された場合は \\(x^{(\tau+1)} \gets x^{\star}\\) と設定し、棄却された場合は \\(x^{(\tau+1)} \gets x^{(\tau)}\\) と設定する
 5. 2~4を十分なサンプルが得られるまで繰り返す
 
 この受理確率 \\(\alpha\\) を決める基準をMetropolis基準という。
@@ -114,23 +114,23 @@ $$ P(X\_{n+1} = x | X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = 
 ```julia
 # p: (unnormalized) probability density function
 # x0: initial state
-# n_samples: the number of required samples
+# N: the number of required samples
 # ϵ: step size
-function metropolis(p::Function, x0::Vector{Float64}, n_samples::Int, ϵ::Float64)
+function metropolis(p::Function, x0::Vector{Float64}, N::Int, ϵ::Float64)
     d = length(x0)
     # allocate samples' holder
-    samples = Array(typeof(x0), n_samples)
+    samples = Array(typeof(x0), N)
     # set the current state to the initial state
     x = x0
-    for i in 1:n_samples
+    for n in 1:N
         # generate a candidate sample from
         # the proposal distribution (normal distribution)
         x_star = randn(d) * ϵ .+ x
         if rand() < min(1.0, p(x_star) / p(x))
-            # accept the sample
+            # accept the proposal
             x = x_star
         end
-        samples[i] = x
+        samples[n] = x
     end
     samples
 end
@@ -163,7 +163,7 @@ end
 
 ---
 
-### 結果
+### 結果 - created with [Gadfly.jl](http://gadflyjl.org/)
 
 <figure>
     <img src="images/metropolis.10.svg" style="width: 700px;">
@@ -171,7 +171,7 @@ end
 
 ---
 
-### 結果
+### 結果 - created with [Gadfly.jl](http://gadflyjl.org/)
 
 <figure>
     <img src="images/metropolis.01.svg" style="width: 350px; float: left;">
@@ -186,8 +186,8 @@ end
 
 確率分布の値が集中してるのはごく一部だけ。
 
-* ステップサイズ \\( \epsilon \\) 大 => 大きく動けるが、棄却率が上がる
-* ステップサイズ \\( \epsilon \\) 小 => 棄却率は抑えられるが、あまり動けない
+* ステップサイズ \\( \epsilon \\) 大 ➠ 大きく動けるが、棄却率が上がる
+* ステップサイズ \\( \epsilon \\) 小 ➠ 棄却率は抑えられるが、あまり動けない
 
 MCMCからなるべく独立なサンプルを得るにはステップサイズを大きくしたいが、棄却率が上がるためサンプリングの効率が悪くなるトレードオフがある。
 
@@ -309,7 +309,7 @@ $$
 ### 何故Euler法など他の方法ではダメなのか
 
 * 同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) を不変にするためには、\\(H\\) の体積を不変にしなければならない
-* しかし、Euler法では(精度の悪さを無視しても)体積が変化してしまう
+* しかし、Euler法では(精度の悪さを無視しても)体積が変化してしまうので、 \\(P(\mathbf{x}, \mathbf{p})\\) が不変にならない
 * Leapfrog離散化では、3つの更新式はそれぞれ**剪断写像(shear mapping)**なので、それぞれ適用しても体積が変化しない
 
 <figure>
@@ -321,22 +321,66 @@ $$
 
 ---
 
-## 1次元の正規分布
+### HMCによるサンプリングアルゴリズム
 
-試しに、正規分布 \\( \mathcal{N(q|\mu, \sigma^2)}\\) からのサンプリングを考えてみる。
-
-$$
-U(q) = -\ln \mathcal{N(q|\mu,\sigma^2)} \propto (q - \mu)^2
-$$
+1. 初期状態 \\(\mathbf{x^{(0)}}\\) を決める
+2. 運動量を正規分布などからサンプリングする
+3. \\(\mathbf{x^{(\tau)}}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\mathbf{x}^{\star}\\) を得る
+4. 確率 \\( \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{x^\star}, \mathbf{p^\star})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
+5. 受容された場合は \\(x^{(\tau+1)} \gets x^{\star}\\) と設定し、棄却された場合は \\(x^{(\tau+1)} \gets x^{(\tau)}\\) と設定する
+6. 2~5を十分なサンプルが得られるまで繰り返す
 
 ---
 
-## 重要な性質
+### 実装
 
-* reversibility
-* conservation of Hamiltonian
-* volume preservation
+```julia
+# u:  potential energy function
+# ∇u: gradient of the potential energy function
+# x0: initial state
+# N:  the number of required samples
+# ϵ:  step size
+# L:  number of steps
+function hmc(u::Function, ∇u::Function, x0::Vector{Float64}, N::Int, ϵ::Float64, L::Int)
+    d = length(x0)
+    # allocate sampels' holder
+    samples = Array(typeof(x0), n_samples)
+    # set the current sate to the initail state
+    x = x0
+    for n in 1:N
+        p = randn(d)
+        h = u(x) + 0.5 * p ⋅ p
+        x_star = x
+        for l in 1:L
+            # half step in momentum variable
+            p -= ϵ / 2 * ∇u(x_star)
+            # full step in location variable
+            x_star += ϵ * p
+            # half step in momentum variable again
+            p -= ϵ / 2 * ∇u(x_star)
+        end
+        h_star = u(x_star) + 0.5 * p ⋅ p
+        if randn() < min(1.0, exp(h - h_star))
+            # accept the proposal
+            x = x_star
+        end
+        samples[n] = x
+    end
+    samples
+end
+```
 
+---
+class: center, middle
+
+# No-U-Turn Sampler (NUTS)
+
+---
+
+# No-U-Turn Sampler
+
+HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つのパラメータに敏感だった。
+**No-U-Turn Sampler (NUTS)**はこれらのパラメータをうまいこと調節して、最適なHMCサンプラーと同じくら質の良いサンプルが得られるようになっている。
 
 ---
 
