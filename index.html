@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Juliaによるマルコフ連鎖モンテカルロ法</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      /*body { font-family: 'Droid Serif'; }*/
+      body {
+        font-family: Helvetica, arial, freesans, clean, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      }
+      h1, h2, h3 {
+        /*font-family: 'Yanone Kaffeesatz';*/
+        color: #434343;
+        font-family: Verdana, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "游ゴシック", YuGothic, "メイリオ", Meiryo, sans-serif;
+        font-weight: bold;
+      }
+
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .code-wrap.bigger .remark-code {
+          font-size: 1.4em;
+      }
+      .code-wrap.bigger22 .remark-code {
+          font-size: 22px;
+      }
+      .remark-slide-content {
+          /* wider */
+          padding: 1em 2.5em 1em 2.5em;
+          font-size: 25px;
+      }
+      .xxxer { color: gray; }
+      a { 
+          color: gray;
+          font-style: underline;
+      }
+      /* http://www.webmaster-source.com/2012/04/24/pure-css-blockquote-styling/ */
+      blockquote {
+          font-family: Georgia, serif;
+          font-size: 18px;
+          font-style: italic;
+          width: 500px;
+          margin: 0.25em auto;
+          padding: 0.25em 40px;
+          line-height: 1.45;
+          position: relative;
+          color: #383838;
+      }
+      blockquote:before {
+          display: block;
+          content: "\201C";
+          font-size: 80px;
+          position: absolute;
+          left: -20px;
+          top: -20px;
+          color: #7a7a7a;
+      }
+      blockquote cite {
+          color: #999999;
+          font-size: 14px;
+          display: block;
+          margin-top: 5px;
+      }
+      blockquote cite:before {
+          content: "\2014 \2009";
+      }
+      li {
+          margin: 0.5em 0;
+      }
+      code, .pre {
+          border: solid 1px #e1e4e5;
+          font-size: 95%;
+          padding: 0 4px;
+          overflow: hidden;
+      }
+      .code-wrap.plain code {
+          border: none;
+          padding: 0;
+      }
+      table {
+          border-collapse: collapse;
+          margin: 1em auto;
+      }
+      table caption {
+          margin: 0.75em 0 0.75em 0;
+          font-weight: bold;
+      }
+      th {
+          text-align: center;
+      }
+      table, th, td {
+          font-size: 0.85em;
+          border: solid 1px #e1e4e5;
+          padding: 5px 10px;
+      }
+      img {
+          display: block;
+          margin: 0 auto;
+          max-height: 450px;
+      }
+      .agenda {
+          font-size: 1.4em;
+      }
+      .column-left {
+          float: left;
+          width: 48%;
+          margin-right: 2%;
+      }
+      .column-right {
+          float: right;
+          width: 50%;
+      }
+      .font65 code {
+          font-size: 65%;
+      }
+      .font70 code {
+          font-size: 70%;
+      }
+      .font75 code {
+          font-size: 75%;
+      }
+      .code-wrap {
+          position: relative;
+      }
+      .watermark {
+          position: absolute;
+          color: #999;
+          font-size: 1.1em;
+          opacity: 0.7;
+      }
+      .watermark.top {
+          right: 0;
+      }
+      .watermark.bottom {
+          right: 0;
+          bottom: 0;
+      }
+      .reference {
+          font-size: 75%;
+      }
+      .note {
+          position: relative;
+          padding: 1em;
+          font-size: 0.65em;
+          color: #6a6a6a;
+      }
+      .note:before {
+          display: block;
+          content: "❏";
+          position: absolute;
+          top: 1em;
+          left: 0;
+          color: #6a6a6a;
+      }
+      .note code {
+          border: 0;
+      }
+      .caption {
+          font-size: 0.7em;
+      }
+      .del {
+          text-decoration: line-through;
+      }
+      .good {
+          color: green;
+      }
+      .bad {
+          color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="jquery-1.11.1.min.js" type="text/javascript"></script>
+    <script src="remark-latest.min.js" type="text/javascript"></script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML&delayStartupUntil=configured" type="text/javascript"></script>
+    <script type="text/javascript">
+remark.highlighter.engine.registerLanguage("julia", function(hljs) {
+  var KEYWORDS = {
+      keyword: "begin while if else elseif end for try return break continue function macro quote let local global const abstract typealias type bitstype immutable ccall do module baremodule using import export importall",
+      literal: "NaN NaN16 NaN32 Inf Inf16 Inf32 e eu pi π eulergamma γ catalan φ golden true false " +
+               "ARGS ENV CPU_CORES OS_NAME ENDIAN_BOM LOAD_PATH DL_LOAD_PATH VERSION JULIA_HOME STDOUT STDIN STDERR " +
+               "MS_SYNC MS_ASYNC MS_INVALIDATE WORD_SIZE C_NULL RTLD_LOCAL RTLD_GLOBAL RTLD_LAZY RTLD_NOW RTLD_NOLOAD RTLD_NODELETE " +
+               "RTLD_DEEPBIND RTLD_FIRST nothing Main",
+      built_in: "Tuple NTuple Symbol Intrinsic IntrinsicFunction Union Type TypeName TypeConstructor TypeVar " +
+                "Any Vararg Top None Nothing Ptr Void Exception Module Box Expr LambdaStaticData DataType " +
+                "UnionType LineNumberNode LabelNode GotoNode TopNode SymbolNode GetfieldNode WeakRef Associative " +
+                "Method MethodTable " +
+                // Numeric
+                "Uint Uint8 Uint16 Uint32 Uint64 Uint128 Int Integer Int8 Int16 Int32 Int64 Int128" +
+                "FloatingPoint Float16 Float32 Float64 Complex32 Complex64 Complex128 Bool Char Number Signed" +
+                "Unsigned Real Rational BigInt BigFloat MathConst " +
+                // C types
+                "FileOffset Cchar Cshort Cint Clong Clonglong Cfloat Cdouble Cptrdiff_t Csize_t Cssize_t Cwchar_t " +
+                "Coff_t Cuchar Cushort Cuint Culong Culonglong" +
+                // Error
+                "BoundsError DivideError DomainError MemoryError IOError OverflowError StackOverflowError " +
+                "EOFError UndefRefError UndefVarError SystemError TypeError ParseError ArgumentError KeyError " +
+                "LoadError MethodError InexactError UVError InterruptException ErrorException ProcessExitedException " +
+                "DimensionMismatch" +
+                // Iterator
+                "EachLine EachSearch Enumerate Zip Filter " +
+                // String
+                "String DirectIndexString ASCIIString UTF8String UTF16String UTF32String ByteString SubString " +
+                "GenericString RepString RevString RopeString TransformedString " +
+                // Array
+                "Array DArray Matrix Vector VecOrMax AbstractArray AbstractMatrix AbstractVector AbstractVecOrMat " +
+                "AbstractSparseArray AbstratSparseMatrix AbstractAbstractSparseVector DenseArray DenseMatrix " +
+                "DenseVector DenseVecOrMat StridedArray StridedMatrix StridedVector StridedVecOrMax " +
+                "SparseMatrixCSC SparseAccumulator SubArray SubDArray SubOrDArray BitArray BitVector BitMatrix " +
+                "SharedArray SharedVector SharedMatrix Diagonal Bidiagonal Tridiagonal SymTridiagonal Woodbury " +
+                "Triangular Hermitian Symmetric UniformScaling " +
+                // Dict/Set
+                "Dict WeakKeyDict ObjectIdDict Set IntSet " +
+                // IO
+                "IO IOStream IOBuffer CFILE Base64Pipe RawFD StatStruct DevNull FileMonitor PollingFileWatcher " +
+                "Timer UdfSocket " +
+                // Process
+                "ProcessGroup PipeBuffer Cmd " +
+                // Range
+                "Range Range1 RangeIndex Ranges OrdinalRange UnitRange Colon " +
+                // Regex
+                "Regex RegexMatch" +
+                // Misc
+                "Factorization InsertionSort QuickSort MergeSort RoundingMode RoundFromZero RondDown RoundNearest " +
+                "RoundToZero RoundUp LocalProcess ClusterManager AbstractRNG MersenneTwister TextDisplay MIME " +
+                "RemoteRef Task Condition VersionNumber TmStruct IPv4 IPv6"
+  };
+
+  var ANNOTATION = {
+    className: "annoation",
+    begin: /::/
+  };
+
+  var NUMBER = {
+    className: "number",
+    begin: hljs.C_NUMBER_RE
+  };
+
+  var INTERPOLATION = {
+    className: 'subst',
+    begin: /\$\(/, end: /\)/,
+    keywords: KEYWORDS
+  };
+
+  var INTERPOLATED_VARIABLE = {
+    className: 'variable',
+    begin: /\$[A-Za-z_]\w*/
+  };
+
+  var STRING = {
+    className: "string",
+    contains: [hljs.BACKSLASH_ESCAPE, INTERPOLATION, INTERPOLATED_VARIABLE],
+    variants: [
+      { begin: '[rv]?"', end: '"' },
+      { begin: '"""', end: '"""' }
+    ]
+  };
+
+  var RANGE = {
+    className: "range",
+    begin: /(:?-?\d*|end)(:?:-?\d+)?:(:?-?\d*|end)/
+  };
+
+  var INDEX = {
+    className: "index",
+    begin: '[', end: ']',
+    contains: [RANGE]
+  };
+
+  var SYMBOL = {
+    className: "symbol",
+    begin: /:(?!end)[A-Za-z_]\w*/
+  };
+
+  var MACRO = {
+    className: "macro",
+    begin: /@[A-Za-z_]\w*/
+  };
+
+  var COMMENT = {
+    className: "comment",
+    contains: [hljs.HASH_COMMENT_MODE],
+    variants: [
+      { begin: "#=", end: "=#" },
+      { begin: '#', end: '$' }
+    ]
+  };
+
+  return {
+    keywords: KEYWORDS,
+    contains: [
+      ANNOTATION,
+      NUMBER,
+      STRING,
+      SYMBOL,
+      MACRO,
+      COMMENT
+    ]
+  };
+});
+        var slideshow = remark.create({
+            sourceUrl: "slides.md",
+            highlightStyle: "github"
+        });
+
+        // Setup MathJax
+        MathJax.Hub.Config({
+            tex2jax: {
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        });
+        MathJax.Hub.Queue(function() {
+            $(MathJax.Hub.getAllJax()).map(function(index, elem) {
+                return(elem.SourceElement());
+            }).parent().addClass('has-jax');
+        });
+
+        MathJax.Hub.Configured();
+    </script>
+  </body>
+</html>
