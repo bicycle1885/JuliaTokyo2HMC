@@ -19,9 +19,10 @@ class: center, middle
     * Metropolis-Hastingsの問題
 * Hamiltonian Monte Carlo (HMC)
     * HMCのアイデア
+    * HMCが解決したこと
     * HMCの難しさ
 * No-U-Turn Sampler (NUTS)
-    * NUTSなら難しくない
+    * NUTSの工夫
 
 ---
 
@@ -69,7 +70,7 @@ class: center, middle
 
 マルコフ連鎖とは、現在の状態のみで次の状態の確率分布が決まる確率過程
 
-$$ P(X\_{n+1} = x | X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = P(X\_{n+1} = x | X\_{n} = x\_{n}) $$
+$$ P(X\_{n+1} = x \mid X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = P(X\_{n+1} = x \mid X\_{n} = x\_{n}) $$
 
 ---
 
@@ -92,9 +93,9 @@ $$ P(X\_{n+1} = x | X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = 
 非正規化確率分布関数\\(\tilde{p}(\mathbf{x})\\)からサンプリングする
 
 1. 初期状態 \\(\mathbf{x^{(0)}}\\) を決める
-2. 提案分布 \\(q(\mathbf{x^{\star}}|\mathbf{x^{(\tau)}})\\) から新たな点 \\(\mathbf{x^{\star}}\\) をとる
-3. 確率 \\(\alpha = \min\left(1, \frac{\tilde{p}(\mathbf{x^{\star}}) q(\mathbf{x^{(\tau)}|x^{\star}})}{\tilde{p}(\mathbf{x^{(\tau)}})q(\mathbf{x^{\star}|x^{(\tau)}})}\right)\\) で \\(\mathbf{x^{\star}}\\) をサンプルとして受容し、そうでなければ棄却する
-4. 受容された場合は \\(x^{(\tau+1)} \gets x^{\star}\\) と設定し、棄却された場合は \\(x^{(\tau+1)} \gets x^{(\tau)}\\) と設定する
+2. 提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x^{(\tau)}})\\) から新たな点 \\(\mathbf{\tilde{x}}\\) をとる
+3. 確率 \\(\alpha = \min\left(1, \frac{\tilde{p}(\mathbf{\tilde{x}}) q(\mathbf{x^{(\tau)} \mid \tilde{x}})}{\tilde{p}(\mathbf{x^{(\tau)}})q(\mathbf{\tilde{x} \mid x^{(\tau)}})}\right)\\) で \\(\mathbf{\tilde{x}}\\) をサンプルとして受容し、そうでなければ棄却する
+4. 受容された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{\tilde{x}}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{x^{(\tau)}}\\) と設定する
 5. 2~4を十分なサンプルが得られるまで繰り返す
 
 この受理確率 \\(\alpha\\) を決める基準をMetropolis基準という。
@@ -103,7 +104,7 @@ $$ P(X\_{n+1} = x | X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = 
 
 ### 提案分布
 
-提案分布 \\(q(\mathbf{x}^{\star}|\mathbf{x}^{(\tau)})\\) は基本的になんでも良いが、正規分布など容易にサンプリングできるものを選ぶ。
+提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x}^{(\tau)})\\) は基本的になんでも良いが、正規分布など容易にサンプリングできるものを選ぶ。
 
 提案分布に対称性があるとき、特に**Metropolis**アルゴリズムなどと呼ばれる。
 
@@ -112,10 +113,10 @@ $$ P(X\_{n+1} = x | X\_{1} = x\_{1}, X\_{2} = x\_{2}, \dots, X\_{n} = x\_{n}) = 
 ### 実装
 
 ```julia
-# p: (unnormalized) probability density function
+# p:  (unnormalized) probability density function
 # x0: initial state
-# N: the number of required samples
-# ϵ: step size
+# N:  the number of required samples
+# ϵ:  step size
 function metropolis(p::Function, x0::Vector{Float64}, N::Int, ϵ::Float64)
     d = length(x0)
     # allocate samples' holder
@@ -125,10 +126,10 @@ function metropolis(p::Function, x0::Vector{Float64}, N::Int, ϵ::Float64)
     for n in 1:N
         # generate a candidate sample from
         # the proposal distribution (normal distribution)
-        x_star = randn(d) * ϵ .+ x
-        if rand() < min(1.0, p(x_star) / p(x))
+        x̃ = randn(d) * ϵ .+ x
+        if rand() < min(1.0, p(x̃) / p(x))
             # accept the proposal
-            x = x_star
+            x = x̃
         end
         samples[n] = x
     end
@@ -162,8 +163,11 @@ end
 ```
 
 ---
+layout: true
 
 ### 結果 - created with [Gadfly.jl](http://gadflyjl.org/)
+
+---
 
 <figure>
     <img src="images/metropolis.10.svg" style="width: 700px;">
@@ -171,14 +175,17 @@ end
 
 ---
 
-### 結果 - created with [Gadfly.jl](http://gadflyjl.org/)
-
 <figure>
     <img src="images/metropolis.01.svg" style="width: 350px; float: left;">
     <img src="images/metropolis.05.svg" style="width: 350px; float: left;">
     <img src="images/metropolis.10.svg" style="width: 350px; float: left;">
     <img src="images/metropolis.20.svg" style="width: 350px; float: left;">
 </figure>
+
+---
+layout: false
+
+## Metropolis-Hastingsの問題
 
 ---
 
@@ -197,7 +204,7 @@ MCMCからなるべく独立なサンプルを得るにはステップサイズ�
 
 ### 問題2: ランダムウォーク問題
 
-* 提案分布が提示する候補点 \\(\mathbf{x^{\star}}\\) は、現在の値 \\(\mathbf{x^{(\tau)}}\\) からみて等方的
+* 提案分布が提示する候補点 \\(\mathbf{\tilde{x}}\\) は、現在の値 \\(\mathbf{x^{(\tau)}}\\) からみて等方的
 * ランダムウォークでは(おおまかに言って)反復回数の平方根に比例した距離しか進めない
 * 確率のある空間を端から端まで渡るのにかなり反復回数が必要になる
 
@@ -216,14 +223,6 @@ class: center, middle
 * 確率変数が取りうる値の空間での粒子の運動を追って、サンプルを得る
 * 他のMCMCのアルゴリズムと比較して、相関の少ない良いサンプルが得られやすい
 * この手法を発展させた**No-U-Turn Sampler**はStanというベイズ推定のためのプログラミング言語に実装されている
-
----
-
-### HMCの大枠
-
-1. サンプリングをしたい確率分布に応じてハミルトン関数(Hamiltonian function)を定義する
-2. 運動量(momentum)を変化させながら、次の位置を決める
-3. 運動の計算はleap frog法という微分方程式の数値計算アルゴリズムによって計算される
 
 ---
 
@@ -260,13 +259,20 @@ $$ H(\mathbf{x}, \mathbf{p}) = U(\mathbf{x}) + K(\mathbf{p}) $$
 
 ### サンプリングへの応用
 
-位置ベクトル \\(\mathbf{x}\\) が対象の確率変数にあたり、ポテンシャルエネルギー\\(U(\mathbf{x})\\)はサンプリングしたい確率分布から導かれる。
+* 変数
+    * 位置ベクトル \\(\mathbf{x}\\): サンプリングしたい確率変数
+    * 運動量ベクトル \\(\mathbf{p}\\): 運動の補助的な変数
+* エネルギー
+    * ポテンシャルエネルギー \\(U(\mathbf{x})\\): Boltzmann分布を基に設定
+    * 運動エネルギー \\(K(\mathbf{p})\\): 適当な運動エネルギーに設定
 
-位置ベクトルと運動量ベクトルの同時分布は以下のように分解できる。
+位置ベクトルと運動量ベクトルの同時分布 \\( P(\mathbf{x}, \mathbf{p}) \\) は \\(H(\mathbf{x}, \mathbf{p}) = U(\mathbf{x}) + K(\mathbf{p})\\) より以下のように分解できる。
 
 $$ P(\mathbf{x}, \mathbf{p}) = \frac{1}{Z} \exp{\left(-H(\mathbf{x}, \mathbf{p})\right)} = \frac{1}{Z} \exp{\left(-U(\mathbf{x})\right)} \exp{\left(-K(\mathbf{p})\right)} $$
 
-なので同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) からサンプリングし、運動量ベクトル \\(\mathbf{p}\\) は捨てて位置ベクトル \\(\mathrm{x}\\) だけ集めれば良い。
+???
+
+なので同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) からサンプリングし、運動量ベクトル \\(\mathbf{p}\\) は捨てて位置ベクトル \\(\mathbf{x}\\) だけ集めれば良い。
 
 ---
 
@@ -274,9 +280,9 @@ $$ P(\mathbf{x}, \mathbf{p}) = \frac{1}{Z} \exp{\left(-H(\mathbf{x}, \mathbf{p})
 
 提示された候補点に関するMetropolis基準は以下のようになる。
 
-$$ \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{x^\star}, \mathbf{p^\star})\right\\}}\right)} $$
+$$ \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}})\right\\}}\right)} $$
 
-理論的には、\\(H\\) の値は**不変**なので \\( H(\mathbf{x}, \mathbf{p}) - H(\mathbf{x^\star}, \mathbf{p^\star}) = 0\\) ゆえ必ず受理される(\\(\alpha = 1\\))が、コンピュータで数値的にハミルトン方程式を離散化して解くと必ず誤差が発生するため現実的には棄却率はゼロでない。
+理論的には、\\(H\\) の値は**不変**なので \\( H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}}) = 0\\) ゆえ必ず受理される (\\(\alpha = 1\\)) はずだが、コンピュータで数値的にハミルトン方程式を離散化して解くと必ず誤差が発生するため現実的には棄却率は**ゼロでない**。
 
 不変性の証明:
 
@@ -298,18 +304,20 @@ $$
 
 $$
 \begin{align}
-p\_{i}\left(t + \epsilon / 2 \right) & = p\_{i}(t) - \frac{\epsilon}{2} \frac{\partial U(x(t))}{\partial x\_{i}} \\\\
+p\_{i}\left(t + \epsilon / 2 \right) & = p\_{i}(t) - \frac{\epsilon}{2} \frac{\partial U(\mathbf{x}(t))}{\partial x\_{i}} \\\\
 x\_{i}\left(t + \epsilon\right) & = x\_{i}(t) + \epsilon p\_i(t + \epsilon / 2) \\\\
-p\_{i}\left(t + \epsilon\right) & = p\_{i}(t + \epsilon / 2) - \frac{\epsilon}{2} \frac{\partial U(x(t + \epsilon))}{\partial x\_{i}}
+p\_{i}\left(t + \epsilon\right) & = p\_{i}(t + \epsilon / 2) - \frac{\epsilon}{2} \frac{\partial U(\mathbf{x}(t + \epsilon))}{\partial x\_{i}}
 \end{align}
 $$
 
+🐸
+
 ---
 
-### 何故Euler法など他の方法ではダメなのか
+### 何故Leapfrog離散化なのか
 
-* 同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) を不変にするためには、\\(H\\) の体積を不変にしなければならない
-* しかし、Euler法では(精度の悪さを無視しても)体積が変化してしまうので、 \\(P(\mathbf{x}, \mathbf{p})\\) が不変にならない
+* 同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) を不変にするためには、\\(H(\mathbf{x}, \mathbf{p})\\) の体積を不変にしなければならない
+* しかし、Euler法などでは(精度の悪さを無視しても)体積が変化してしまうので、 \\(P(\mathbf{x}, \mathbf{p})\\) が不変にならない
 * Leapfrog離散化では、3つの更新式はそれぞれ**剪断写像(shear mapping)**なので、それぞれ適用しても体積が変化しない
 
 <figure>
@@ -325,9 +333,9 @@ $$
 
 1. 初期状態 \\(\mathbf{x^{(0)}}\\) を決める
 2. 運動量を正規分布などからサンプリングする
-3. \\(\mathbf{x^{(\tau)}}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\mathbf{x}^{\star}\\) を得る
-4. 確率 \\( \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{x^\star}, \mathbf{p^\star})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
-5. 受容された場合は \\(x^{(\tau+1)} \gets x^{\star}\\) と設定し、棄却された場合は \\(x^{(\tau+1)} \gets x^{(\tau)}\\) と設定する
+3. \\(\mathbf{x^{(\tau)}}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\mathbf{\tilde{x}}\\) を得る
+4. 確率 \\( \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
+5. 受容された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{\tilde{x}}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{x^{(\tau)}}\\) と設定する
 6. 2~5を十分なサンプルが得られるまで繰り返す
 
 ---
@@ -335,34 +343,31 @@ $$
 ### 実装
 
 ```julia
-# u:  potential energy function
-# ∇u: gradient of the potential energy function
-# x0: initial state
-# N:  the number of required samples
-# ϵ:  step size
-# L:  number of steps
+#  u : potential energy function
+# ∇u : gradient of the potential energy function
+# x0 : initial state
+#  N : the number of required samples
+#  ϵ : step size
+#  L : number of steps
 function hmc(u::Function, ∇u::Function, x0::Vector{Float64}, N::Int, ϵ::Float64, L::Int)
     d = length(x0)
     # allocate sampels' holder
-    samples = Array(typeof(x0), n_samples)
+    samples = Array(typeof(x0), N)
     # set the current sate to the initail state
     x = x0
     for n in 1:N
         p = randn(d)
-        h = u(x) + 0.5 * p ⋅ p
-        x_star = x
+        h = u(x) + p ⋅ p / 2
+        x̃ = x
         for l in 1:L
-            # half step in momentum variable
-            p -= ϵ / 2 * ∇u(x_star)
-            # full step in location variable
-            x_star += ϵ * p
-            # half step in momentum variable again
-            p -= ϵ / 2 * ∇u(x_star)
+            p -= ϵ / 2 * ∇u(x̃)  # half step in momentum variable
+            x̃ += ϵ * p          # full step in location variable
+            p -= ϵ / 2 * ∇u(x̃)  # half step in momentum variable again
         end
-        h_star = u(x_star) + 0.5 * p ⋅ p
-        if randn() < min(1.0, exp(h - h_star))
+        h̃ = u(x̃) + p ⋅ p / 2
+        if randn() < min(1.0, exp(h - h̃))
             # accept the proposal
-            x = x_star
+            x = x̃
         end
         samples[n] = x
     end
@@ -371,16 +376,80 @@ end
 ```
 
 ---
+layout: true
+
+### 結果 - created with [Gadfly.jl](http://gadflyjl.org/)
+
+---
+
+<figure>
+    <img src="images/hmc.01.svg" style="width: 700px;">
+</figure>
+
+\\(L = 10\\)
+
+---
+
+<figure>
+    <img src="images/hmc.001.svg" style="width: 350px; float: left;">
+    <img src="images/hmc.005.svg" style="width: 350px; float: left;">
+    <img src="images/hmc.01.svg" style="width: 350px; float: left;">
+    <img src="images/hmc.05.svg" style="width: 350px; float: left;">
+</figure>
+
+\\(L = 10\\)
+
+---
+layout: false
+
+## HMCが解決したこと
+
+* ステップサイズ \\(\epsilon\\) を十分小さくとれば、棄却率を低く抑えられる
+* 粒子が \\(L\\) ステップ連続して系統的に移動するため、ランダムウォークと比べて遠くまで動ける
+
+棄却率を抑えつつ前の位置より遠くまで動くことができるようになり、得られるサンプルが**より独立なサンプル**に近づいた。
+
+---
+
+## HMCの難しさ
+
+HMCの利点は、運動を調節する2つのパラメータ
+
+* ステップサイズ \\(\epsilon\\)
+* ステップ数 \\(L\\)
+
+の値が良い値に設定されているということに依存している。
+
+先ほどのサンプリングの結果から、HMCの性能はこれらのパラメータの値に極めて過敏になっていることが分かる。
+
+---
+
+### \\(\epsilon\\) と \\(L\\) の調整を間違えるとどうなるか
+
+ステップサイズ \\(\epsilon\\):
+* \\(\epsilon\\) が小さすぎる ➠ 粒子があまり動かない
+* \\(\epsilon\\) が大きすぎる ➠ leapfrog離散化が荒すぎて棄却率が上がる
+
+ステップ数 \\(L\\):
+* \\(L\\) が小さすぎる ➠ ランダムウォークをしてしまう
+* \\(L\\) が大きすぎる ➠ 粒子が引き返す (Uターン)
+
+
+---
 class: center, middle
 
 # No-U-Turn Sampler (NUTS)
 
 ---
 
-# No-U-Turn Sampler
+## No-U-Turn Sampler
 
 HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つのパラメータに敏感だった。
 **No-U-Turn Sampler (NUTS)**はこれらのパラメータをうまいこと調節して、最適なHMCサンプラーと同じくら質の良いサンプルが得られるようになっている。
+
+---
+
+## NUTSの工夫
 
 ---
 
