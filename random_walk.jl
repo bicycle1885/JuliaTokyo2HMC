@@ -13,5 +13,5 @@ let
         println(x)
     end
     draw(SVG("random_walk.svg", 6inch, 2inch),
-        plot(x=0:M, y=xs, Geom.line, Guide.xlabel("m"), Guide.ylabel("x")))
+        plot(x=0:M, y=xs, Geom.line, Guide.xlabel("m"), Guide.ylabel("θ")))
 end

@@ -111,13 +111,9 @@ $$ P(X\_{t+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{t} = x\_{t}) = P(X\_{t+1} = x
 
 目的の確率分布 \\(\pi(\mathbf{x})\\) からサンプリングするには、遷移確率が満たさなければならない性質がある。
 
-分布の不変性:
+分布の不変性: \\(\pi(\mathbf{x}) = \int T(\mathbf{x}; \mathbf{x'}) \pi(\mathbf{x'}) \mathrm{d}\mathbf{x'} \\)
 
-\\(\pi(\mathbf{x}) = \int T(\mathbf{x}; \mathbf{x'}) \pi(\mathbf{x'}) \mathrm{d}\mathbf{x'} \\)
-
-エルゴード性:
-
-\\(P^{(t)}(\mathbf{x}) \rightarrow \pi(\mathbf{x}) \, \text{as} \, t \rightarrow \infty, \, \text{for any} \, P^{(0)}(\mathbf{x})\\)
+エルゴード性: \\(P^{(t)}(\mathbf{x}) \rightarrow \pi(\mathbf{x}) \, \text{as} \, t \rightarrow \infty, \, \text{for any} \, P^{(0)}(\mathbf{x})\\)
 
 各サンプラーがこれらを満たすということの説明などは今日はしない(できない)。
 
@@ -150,25 +146,25 @@ class: center, middle
 
 MCMCサンプリングのひとつで、**提案分布**というサンプリングしたい分布とは別の分布から候補点を取り出し、"良い値"ならその点を受理し、そうでなければその場にとどまる。
 
-候補点を生成する提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x})\\) は相関のない正規分布など、サンプリングしやすい分布に設定する。
+候補点を生成する提案分布 \\(q(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta})\\) は相関のない正規分布など、サンプリングしやすい分布に設定する。
 
-候補点 \\(\mathbf{\tilde{x}}\\) は以下の確率 \\(A(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})\\) で受理される:
+候補点 \\(\boldsymbol{\tilde{\theta}}\\) は以下の確率 \\(A(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}^{(m)})\\) で受理される:
 
-$$ A(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)}) =
-    \min\left(1, \frac{\tilde{p}(\mathbf{\tilde{x}}) q(\mathbf{x}^{(m)} \mid \mathbf{\tilde x})}{\tilde{p}(\mathbf{x}^{(m)})q(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})})\right) $$
+$$ A(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}^{(m)}) =
+    \min\left(1, \frac{\tilde{p}(\boldsymbol{\tilde{\theta}}) q(\boldsymbol{\theta}^{(m)} \mid \boldsymbol{\tilde \theta})}{\tilde{p}(\boldsymbol{\theta}^{(m)})q(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}^{(m)})})\right) $$
 
-ここで、\\(\tilde{p}(\mathbf{x})\\) はサンプリングしたい分布 \\(p(\mathbf{x})\\) の非正規化密度関数
+ここで、\\(\tilde{p}(\boldsymbol{\theta})\\) はサンプリングしたい分布 \\(p(\boldsymbol{\theta})\\) の非正規化密度関数
 
 ---
 
 ### Metropolis-Hastingsのアルゴリズム
 
-非正規化確率分布関数 \\(\tilde{p}(\mathbf{x})\\) からサンプリングする
+非正規化確率分布関数 \\(\tilde{p}(\boldsymbol{\theta})\\) からサンプリングする
 
-1. 初期状態 \\(\mathbf{x}^{(0)}\\) を決め、\\(m \gets 0\\) に設定する
-2. 提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})\\) から新たな点 \\(\mathbf{\tilde{x}}\\) をとる
-3. 確率 \\(A(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})\\) で \\(\mathbf{\tilde{x}}\\) をサンプルとして受理し、そうでなければ棄却する
-4. 受理された場合は \\(\mathbf{x}^{(m+1)} \gets \mathbf{\tilde x}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(m + 1)} \gets \mathbf{x}^{(m)}\\) と設定する
+1. 初期状態 \\(\boldsymbol{\theta}^{(0)}\\) を決め、\\(m \gets 0\\) に設定する
+2. 提案分布 \\(q(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}^{(m)})\\) から新たな点 \\(\boldsymbol{\tilde{\theta}}\\) をとる
+3. 確率 \\(A(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}^{(m)})\\) で \\(\boldsymbol{\tilde{\theta}}\\) をサンプルとして受理し、そうでなければ棄却する
+4. 受理された場合は \\(\boldsymbol{\theta}^{(m+1)} \gets \boldsymbol{\tilde \theta}\\) と設定し、棄却された場合は \\(\boldsymbol{\theta}^{(m + 1)} \gets \boldsymbol{\theta}^{(m)}\\) と設定する
 5. \\(m \gets m + 1\\) として、2~4を \\(M\\) 個のサンプルが得られるまで繰り返す
 
 ---
@@ -274,8 +270,8 @@ MCMCからなるべく独立なサンプルを得るにはステップサイズ�
 
 Metropolis-Hastingsから得られたサンプル列は、ランダムウォークをしている
 
-* 提案分布が提示する候補点 \\(\mathbf{\tilde{x}}\\) は、現在の値 \\(\mathbf{x}^{(m)}\\) からみて等方的
-* \\(\mathbf{x}^{(m)}\\) が移動した先からすぐに戻ってきてしまうことがある
+* 提案分布が提示する候補点 \\(\boldsymbol{\tilde{\theta}}\\) は、現在の値 \\(\boldsymbol{\theta}^{(m)}\\) からみて等方的
+* \\(\boldsymbol{\theta}^{(m)}\\) が移動した先からすぐに戻ってきてしまうことがある
 * ランダムウォークでは(おおまかに言って)反復回数の平方根に比例した距離しか進めない
 * 空間を端から端まで渡るのにかなり反復回数が必要になる
 
@@ -317,47 +313,47 @@ $$ E(\mathbf{x}) = -\log P(\mathbf{x}) - \log Z $$
 
 ### ハミルトン力学
 
-粒子の運動を考える。\\(\mathbf{x}\\) を粒子の位置ベクトル、\\(\mathbf{p}\\) を運動量ベクトルとした時の粒子の運動を決めるハミルトン方程式:
+粒子の運動を考える。\\(\boldsymbol{\theta}\\) を粒子の位置ベクトル、\\(\boldsymbol{r}\\) を運動量ベクトルとした時の粒子の運動を決めるハミルトン方程式:
 
 $$
 \begin{align}
-\frac{\mathrm{d}x_i}{\mathrm{d}t} & = \frac{\partial H}{\partial p_i} \\\\
-\frac{\mathrm{d}p_i}{\mathrm{d}t} & = - \frac{\partial H}{\partial x_i}
+\frac{\mathrm{d}\theta_i}{\mathrm{d}t} & = \frac{\partial H}{\partial r_i} \\\\
+\frac{\mathrm{d}r_i}{\mathrm{d}t} & = - \frac{\partial H}{\partial \theta_i}
 \end{align}
 $$
 
-ここで、ハミルトニアン \\(H(\mathbf{x},\mathbf{p})\\) はポテンシャルエネルギー \\(U(\mathbf{x})\\) と運動エネルギー \\(K(\mathbf{p})\\) の和として定義される。
+ここで、ハミルトニアン \\(H(\boldsymbol{\theta},\boldsymbol{r})\\) はポテンシャルエネルギー \\(U(\boldsymbol{\theta})\\) と運動エネルギー \\(K(\boldsymbol{r})\\) の和として定義される。
 
-$$ H(\mathbf{x}, \mathbf{p}) = U(\mathbf{x}) + K(\mathbf{p}) $$
+$$ H(\boldsymbol{\theta}, \boldsymbol{r}) = U(\boldsymbol{\theta}) + K(\boldsymbol{r}) $$
 
 ---
 
 ### サンプリングへの応用
 
 * 変数
-    * 位置ベクトル \\(\mathbf{x}\\): サンプリングしたい確率変数
-    * 運動量ベクトル \\(\mathbf{p}\\): 運動の補助的な変数
+    * 位置ベクトル \\(\boldsymbol{\theta}\\): サンプリングしたい確率変数
+    * 運動量ベクトル \\(\boldsymbol{r}\\): 運動の補助的な変数
 * エネルギー
-    * ポテンシャルエネルギー \\(U(\mathbf{x})\\): Boltzmann分布を基に設定
-    * 運動エネルギー \\(K(\mathbf{p})\\): 適当な運動エネルギーに設定
+    * ポテンシャルエネルギー \\(U(\boldsymbol{\theta})\\): Boltzmann分布を基に設定
+    * 運動エネルギー \\(K(\boldsymbol{r})\\): 適当な運動エネルギーに設定
 
-位置ベクトルと運動量ベクトルの同時分布 \\( P(\mathbf{x}, \mathbf{p}) \\) は \\(H(\mathbf{x}, \mathbf{p}) = U(\mathbf{x}) + K(\mathbf{p})\\) より以下のように分解できる。
+位置ベクトルと運動量ベクトルの同時分布 \\( p(\boldsymbol{\theta}, \boldsymbol{r}) \\) は \\(H(\boldsymbol{\theta}, \boldsymbol{r}) = U(\boldsymbol{\theta}) + K(\boldsymbol{r})\\) より以下のように分解できる。
 
-$$ P(\mathbf{x}, \mathbf{p}) = \frac{1}{Z} \exp{\left(-H(\mathbf{x}, \mathbf{p})\right)} = \frac{1}{Z} \exp{\left(-U(\mathbf{x})\right)} \exp{\left(-K(\mathbf{p})\right)} $$
+$$ p(\boldsymbol{\theta}, \boldsymbol{r}) = \frac{1}{Z} \exp{\left(-H(\boldsymbol{\theta}, \boldsymbol{r})\right)} = \frac{1}{Z} \exp{\left(-U(\boldsymbol{\theta})\right)} \exp{\left(-K(\boldsymbol{r})\right)} $$
 
 ???
 
-なので同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) からサンプリングし、運動量ベクトル \\(\mathbf{p}\\) は捨てて位置ベクトル \\(\mathbf{x}\\) だけ集めれば良い。
+なので同時分布 \\(r(\boldsymbol{\theta}, \boldsymbol{r})\\) からサンプリングし、運動量ベクトル \\(\boldsymbol{r}\\) は捨てて位置ベクトル \\(\boldsymbol{\theta}\\) だけ集めれば良い。
 
 ---
 
-### HMCのMetropolis基準
+### HMCの受容確率
 
-提示された候補点に関するMetropolis基準は以下のようになる。
+提示された候補点に関する受容[確率は以下のようになる。
 
-$$ \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}})\right\\}}\right)} $$
+$$ \min{\left(1, \exp{\left\\{H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}})\right\\}}\right)} $$
 
-理論的には、\\(H\\) の値は**不変**なので \\( H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}}) = 0\\) ゆえ必ず受理される (\\(\alpha = 1\\)) はずだが、コンピュータで数値的にハミルトン方程式を離散化して解くと必ず誤差が発生するため現実的には棄却率は**ゼロでない**。
+理論的には、\\(H\\) の値は**不変**なので \\( H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}}) = 0\\) ゆえ必ず受理される (\\(\alpha = 1\\)) はずだが、コンピュータで数値的にハミルトン方程式を離散化して解くと必ず誤差が発生するため現実的には棄却率は**ゼロでない**。
 
 ---
 
@@ -368,9 +364,9 @@ $$ \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\ti
 
 $$
 \begin{align}
-p\_{i}\left(t + \epsilon / 2 \right) & = p\_{i}(t) - \frac{\epsilon}{2} \frac{\partial U(\mathbf{x}(t))}{\partial x\_{i}} \\\\
-x\_{i}\left(t + \epsilon\right) & = x\_{i}(t) + \epsilon p\_i(t + \epsilon / 2) \\\\
-p\_{i}\left(t + \epsilon\right) & = p\_{i}(t + \epsilon / 2) - \frac{\epsilon}{2} \frac{\partial U(\mathbf{x}(t + \epsilon))}{\partial x\_{i}}
+r\_{i}\left(t + \epsilon / 2 \right) & = r\_{i}(t) - \frac{\epsilon}{2} \frac{\partial U(\boldsymbol{\theta}(t))}{\partial \theta\_{i}} \\\\
+\theta\_{i}\left(t + \epsilon\right) & = \theta\_{i}(t) + \epsilon r\_i(t + \epsilon / 2) \\\\
+r\_{i}\left(t + \epsilon\right) & = r\_{i}(t + \epsilon / 2) - \frac{\epsilon}{2} \frac{\partial U(\boldsymbol{\theta}(t + \epsilon))}{\partial \theta\_{i}}
 \end{align}
 $$
 
@@ -379,8 +375,8 @@ $$
 
 ### なぜLeapfrog離散化なのか
 
-* 同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) を不変にするためには、\\(H(\mathbf{x}, \mathbf{p})\\) の体積を不変にしなければならない
-* しかし、Euler法などでは(精度の悪さを無視しても)体積が変化してしまうので、 \\(P(\mathbf{x}, \mathbf{p})\\) が不変にならない
+* 同時分布 \\(p(\boldsymbol{\theta}, \boldsymbol{r})\\) を不変にするためには、\\(H(\boldsymbol{\theta}, \boldsymbol{r})\\) の体積を不変にしなければならない
+* しかし、Euler法などでは(精度の悪さを無視しても)体積が変化してしまうので、 \\(p(\boldsymbol{\theta}, \boldsymbol{r})\\) が不変にならない
 * Leapfrog離散化では、3つの更新式はそれぞれ**剪断写像(shear mapping)**なので、それぞれ適用しても体積が変化しない
 
 <figure>
@@ -393,11 +389,11 @@ $$
 
 ### HMCによるサンプリングアルゴリズム
 
-1. 初期状態 \\(\mathbf{x}^{(0)}\\) を決め、\\(m \gets 0\\) に設定する
+1. 初期状態 \\(\boldsymbol{\theta}^{(0)}\\) を決め、\\(m \gets 0\\) に設定する
 2. 運動量を正規分布などからサンプリングする
-3. \\(\mathbf{x}^{(m)}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\mathbf{\tilde{x}}\\) を得る
-4. 確率 \\(\min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
-5. 受理された場合は \\(\mathbf{x}^{(m+1)} \gets \mathbf{\tilde{x}}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(m+1)} \gets \mathbf{x}^{(m)}\\) と設定する
+3. \\(\boldsymbol{\theta}^{(m)}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\boldsymbol{\tilde{\theta}}\\) を得る
+4. 確率 \\(\min{\left(1, \exp{\left\\{H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
+5. 受理された場合は \\(\boldsymbol{\theta}^{(m+1)} \gets \boldsymbol{\tilde{\theta}}\\) と設定し、棄却された場合は \\(\boldsymbol{\theta}^{(m+1)} \gets \boldsymbol{\theta}^{(m)}\\) と設定する
 6. \\(m \gets m + 1\\) として、2~5を \\(M\\) 個のサンプルが得られるまで繰り返す
 
 ---
@@ -570,9 +566,9 @@ HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つの
 
 ### 引き返しの基準
 
-軌跡の長さの時間変化は、始点 \\(\mathbf x\\) から現在の点 \\(\mathbf{\tilde x}\\) までのベクトルと運動量ベクトル \\(\mathbf{\tilde p}\\) の積に比例する
+軌跡の長さの時間変化は、始点 \\(\boldsymbol \theta\\) から現在の点 \\(\boldsymbol{\tilde \theta}\\) までのベクトルと運動量ベクトル \\(\boldsymbol{\tilde r}\\) の積に比例する
 
-$$ \frac{\mathrm d}{\mathrm d t} \frac{(\mathbf{\tilde x} - \mathbf x)^{\mathrm T}(\mathbf{\tilde x} - \mathbf x)}{2} = (\mathbf{\tilde x} - \mathbf x)^{\mathrm T} \frac{\mathrm d}{\mathrm d t}(\mathbf{\tilde x} - \mathbf x) = (\mathbf{\tilde x} - \mathbf x)^{\mathrm T}{\mathbf{\tilde p}} $$
+$$ \frac{\mathrm d}{\mathrm d t} \frac{(\boldsymbol{\tilde \theta} - \boldsymbol \theta)^{\mathrm T}(\boldsymbol{\tilde \theta} - \boldsymbol \theta)}{2} = (\boldsymbol{\tilde \theta} - \boldsymbol \theta)^{\mathrm T} \frac{\mathrm d}{\mathrm d t}(\boldsymbol{\tilde \theta} - \boldsymbol \theta) = (\boldsymbol{\tilde \theta} - \boldsymbol \theta)^{\mathrm T}{\boldsymbol{\tilde r}} $$
 
 この値が \\(0\\) 以下になったら、軌跡がUターンをし始めたことになる。
 
