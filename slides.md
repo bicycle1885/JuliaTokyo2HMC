@@ -171,6 +171,9 @@ $$ A(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}^{(m)}) =
 
 提案分布は正規分布(`randn`)
 
+.font75[
+.code-wrap[
+.watermark.top[metropolis.jl]
 ```julia
 #  p: (unnormalized) probability density function
 # θ₀: initial state
@@ -196,6 +199,8 @@ function metropolis(p::Function, θ₀::Vector{Float64}, M::Int, ϵ::Float64)
     samples
 end
 ```
+]
+]
 
 ---
 
@@ -399,6 +404,8 @@ $$
 ---
 
 .font65[
+.code-wrap[
+.watermark.top[hmc.jl]
 ```julia
 #  U : potential energy function
 # ∇U : gradient of the potential energy function
@@ -433,6 +440,7 @@ function hmc(U::Function, ∇U::Function, θ₀::Vector{Float64}, M::Int, ϵ::Fl
     samples
 end
 ```
+]
 ]
 
 ---
@@ -577,6 +585,8 @@ $$ \frac{\mathrm d}{\mathrm d t} \frac{(\boldsymbol{\tilde \theta} - \boldsymbol
 長いので気になる方はサンプルコードのnuts.jlを参照して下さい。
 
 .font55[
+.code-wrap[
+.watermark.top[nuts.jl]
 ```julia
 #  L: logarithm of the joint density θ
 # ∇L: gradient of L
@@ -615,6 +625,7 @@ function nuts(L::Function, ∇L::Function, θ₀::Vector{Float64}, M::Int, ϵ::F
     samples
 end
 ```
+]
 ]
 
 ---
@@ -684,6 +695,8 @@ class: center, middle
 
 .column-left[
 .font65[
+.code-wrap[
+.watermark.bottom[nuts.jl]
 ```julia
 function build_tree(L::Function, ∇L::Function, θ::Vector{Float64}, r::Vector{Float64}, u::Float64, v::Int, j::Int, ϵ::Float64)
     if j == 0
@@ -704,6 +717,7 @@ function build_tree(L::Function, ∇L::Function, θ::Vector{Float64}, r::Vector{
     end
 end
 ```
+]
 ]
 ]
 .right-column[
