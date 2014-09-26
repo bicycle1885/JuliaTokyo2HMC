@@ -28,3 +28,5 @@ function plot_samples(filename, samples, title)
          plot(x=xs, y=ys, color=ns, Geom.point,
               Guide.title(title), Guide.colorkey("Iteration")))
 end
+
+print_sample(sample) = println(join(sample, '\t'))

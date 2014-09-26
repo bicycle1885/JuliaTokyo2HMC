@@ -1,46 +1,62 @@
+doc = """Hamiltonian Monte Carlo (HMC) Sampler.
+
+Usage:
+    hmc.jl [options] <# of samples>
+
+Options:
+   -h --help    Show this help.
+   --plot       Plot samples.
+"""
 using Gadfly
+using DocOpt
 
 include("util.jl")
 
-#  u : potential energy function
-# ∇u : gradient of the potential energy function
-# x0 : initial state
-#  N : the number of required samples
+#  U : potential energy function
+# ∇U : gradient of the potential energy function
+# θ₀ : initial state
+#  M : number of samples
 #  ϵ : step size
 #  L : number of steps
-function hmc(u::Function, ∇u::Function, x0::Vector{Float64}, N::Int, ϵ::Float64, L::Int)
-    d = length(x0)
+function hmc(U::Function, ∇U::Function, θ₀::Vector{Float64}, M::Int, ϵ::Float64, L::Int)
+    d = length(θ₀)
     # allocate sampels' holder
-    samples = Array(typeof(x0), N)
+    samples = Array(typeof(θ₀), M)
     # set the current sate to the initail state
-    x = x0
-    for n in 1:N
+    θ = θ₀
+    for m in 1:M
+        # sample momentum variable
         p = randn(d)
-        h = u(x) + p ⋅ p / 2
-        x̃ = x
+        H = U(θ) + p ⋅ p / 2
+        θ̃ = θ
         for l in 1:L
-            p -= ϵ / 2 * ∇u(x̃)  # half step in momentum variable
-            x̃ += ϵ * p          # full step in location variable
-            p -= ϵ / 2 * ∇u(x̃)  # half step in momentum variable again
+            p -= ϵ / 2 * ∇U(θ̃)  # half step in momentum variable
+            θ̃ += ϵ * p          # full step in location variable
+            p -= ϵ / 2 * ∇U(θ̃)  # half step in momentum variable again
         end
-        h̃ = u(x̃) + p ⋅ p / 2
-        if randn() < min(1.0, exp(h - h̃))
+        H̃ = U(θ̃) + p ⋅ p / 2
+        if randn() < min(1.0, exp(H - H̃))
             # accept the proposal
-            x = x̃
+            θ = θ̃
         end
-        samples[n] = x
+        samples[m] = θ
+        print_sample(θ)
     end
     samples
 end
 
 let
+    args = docopt(doc)
     # include functions
     include("norm.jl")
-    L = 10
-    for ϵ in [0.01, 0.05, 0.1, 0.5]
+    M = int(args["<# of samples>"])
+    for L in [1, 5, 10, 25, 50, 100], ϵ in [0.01, 0.05, 0.1, 0.5]
         srand(0)
-        samples = hmc(ln_normal, ∇ln_normal, x0, 1000, ϵ, L)
-        filename = string("hmc.", replace(string(ϵ), ".", ""), ".svg")
-        plot_samples(filename, samples, "ϵ = $ϵ, L = $L")
-     end
+        title = "HMC (ϵ = $ϵ, L = $L)"
+        println("# $title")
+        samples = hmc(x -> -ln_normal(x), x -> -∇ln_normal(x), x₀, M, ϵ, L)
+        if args["--plot"]
+            plot_samples("$title.svg", samples, title)
+        end
+    end
 end
