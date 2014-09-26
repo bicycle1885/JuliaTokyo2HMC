@@ -2,43 +2,36 @@ class: center, middle
 
 ### Julia Tokyo #2
 
-# Juliaで学ぶHamiltonian Monte Carlo法 (NUTS入り)
+# Juliaで学ぶ<br>Hamiltonian Monte Carlo
 
-### 佐藤 建太 (Kenta Sato)
+### NUTS入り
 
-#### [@bicycle1885](https://twitter.com/bicycle1885)
+** 佐藤 建太 (Kenta Sato) **
+
+**[@bicycle1885](https://twitter.com/bicycle1885)**
 
 ---
 
 # コンテンツ
 
 * 自己紹介
-* マルコフ連鎖モンテカルロサンプリング
-    * MCMCとは
-    * 正しいMCMC
-    * 高次元空間でのサンプリングの難しさ
-* Metropolis-Hastings法
-    * Metropolis-Hastings法とは
-    * Metropolis-Hastingsのアルゴリズム
-    * Metropolis-Hastingsの問題
+* マルコフ連鎖モンテカルロ法
+* Metropolis-Hastings
 * Hamiltonian Monte Carlo (HMC)
-    * HMCのアイデア
-    * HMCが解決したこと
-    * パラメータ調節の難しさ
 * No-U-Turn Sampler (NUTS)
-    * NUTSの工夫
 * Juliaで使えるMCMCパッケージ
 
 ---
 
-## こんなヒトのための発表です
+### こんなヒトのための発表です
 
-* MCMCによるサンプリングをblack boxにしたくない
-* 
+* MCMCによるサンプリングをブラックボックスにしたくない
+* Stanなどのサンプラーの原理を垣間見たい
+* Juliaで使えるサンプラーを知りたい
 
 ---
 
-## 注意
+### 注意
 
 * 時間の都合上、MCMC自体は簡単に触れる程度です
 * 数学的に厳密な話は期待しないで下さい
@@ -66,14 +59,28 @@ class: center, middle
 
 ### パッケージ紹介
 
+#### DocOpt.jl - https://github.com/docopt/DocOpt.jl
+
+ヘルプメッセージをパースし、コマンドライン引数のパースをする
+
+#### RandomForests.jl - https://github.com/bicycle1885/RandomForests.jl
+
+機械学習アルゴリズムRandom ForestのJulia実装
+
+
+#### GeneOntology.jl - https://github.com/bicycle1885/GeneOntology.jl
+
+生物学のGene Ontologyのツールキットを目指してる
+
+
 ---
 class: center, middle
 
-## マルコフ連鎖モンテカルロサンプリング
+## マルコフ連鎖モンテカルロ法
 
 ---
 
-### MCMCとは
+### MCMC法とは
 
 言わずと知れた、確率分布 \\( P(\mathbf{x}) \\) からのサンプルを**マルコフ連鎖**を用いて得るサンプリング手法のひとつ。
 
@@ -81,7 +88,7 @@ class: center, middle
 
 マルコフ連鎖とは、現在の状態のみで次の状態の確率分布が決まる確率過程のことをいう。
 
-$$ P(X\_{n+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{n} = x\_{n}) = P(X\_{n+1} = x \mid X\_{n} = x\_{n}) $$
+$$ P(X\_{t+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{t} = x\_{t}) = P(X\_{t+1} = x \mid X\_{t} = x\_{t}) $$
 
 このとき、状態 \\(\mathbf{x}\\) から \\(\mathbf{x'}\\) へ遷移する確率を \\(T(\mathbf{x'} ; \mathbf{x})\\) と書き、**遷移確率**と呼ぶ。
 
@@ -91,9 +98,18 @@ $$ P(X\_{n+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{n} = x\_{n}) = P(X\_{n+1} = x
 
 ---
 
+### マルコフ連鎖の図
+
+<figure>
+    <img src="images/mcmc.png">
+    <figcaption>遷移確率 \( T(\mathbf{x'} ; \mathbf{x}) = P(X_{t+1} = \mathbf{x'} \mid X_{t} = \mathbf{x}) \)</figcaption>
+</figure>
+
+---
+
 ### 正しいMCMC
 
-目的の確率分布 \\(P(\mathbf{x})\\) からサンプリングするには、遷移確率が満たさなければならない性質がある。
+目的の確率分布 \\(\pi(\mathbf{x})\\) からサンプリングするには、遷移確率が満たさなければならない性質がある。
 
 分布の不変性:
 
@@ -103,14 +119,17 @@ $$ P(X\_{n+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{n} = x\_{n}) = P(X\_{n+1} = x
 
 \\(P^{(t)}(\mathbf{x}) \rightarrow \pi(\mathbf{x}) \, \text{as} \, t \rightarrow \infty, \, \text{for any} \, P^{(0)}(\mathbf{x})\\)
 
+各サンプラーがこれらを満たすということの説明などは今日はしない(できない)。
 
 ---
 
 ### 高次元空間でのサンプリングは難しい
 
+確率密度関数 \\(p(\mathbf x)\\) やその非正規化密度関数 \\(\tilde{p}(\mathbf x)\\) があるとする。
+
 高次元空間でのサンプリングの難しさ
 
-* \\( P(\mathbf{x}) \\) "濃い"領域は、空間上のごく一部に集中している
+* \\( p(\mathbf{x}) \\) "濃い"領域は、空間上のごく一部に集中している
 * しかしそれがどこかはサンプリング前には分からない
 
 2つの戦略
@@ -118,42 +137,43 @@ $$ P(X\_{n+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{n} = x\_{n}) = P(X\_{n+1} = x
 1. その場から濃い方へ濃い方へと進み
 2. 濃いところを見つけたらそこから薄いところへはあまり行かない
 
-➠ MCMCはまさにそのような性質を持っている
+➠ MCMCはまさにそのような戦略をとる
 
 ---
 class: center, middle
 
-## Metropolis-Hastings法
+## Metropolis-Hastings
 
 ---
 
-### Metropolis-Hastings法とは
+### Metropolis-Hastings
 
 MCMCサンプリングのひとつで、**提案分布**というサンプリングしたい分布とは別の分布から候補点を取り出し、"良い値"ならその点を受理し、そうでなければその場にとどまる。
 
 候補点を生成する提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x})\\) は相関のない正規分布など、サンプリングしやすい分布に設定する。
 
-候補点 \\(\mathbf{\tilde{x}}\\) は以下の確率 \\(A(\mathbf{\tilde{x}} \mid \mathbf{x^{(\tau)}})\\) で受理される:
+候補点 \\(\mathbf{\tilde{x}}\\) は以下の確率 \\(A(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})\\) で受理される:
 
-$$ A(\mathbf{\tilde{x}} \mid \mathbf{x^{(\tau)}}) = \min\left(1, \frac{\tilde{p}(\mathbf{\tilde{x}}) q(\mathbf{x^{(\tau)} \mid \tilde{x}})}{\tilde{p}(\mathbf{x^{(\tau)}})q(\mathbf{\tilde{x} \mid x^{(\tau)}})}\right) $$
+$$ A(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)}) =
+    \min\left(1, \frac{\tilde{p}(\mathbf{\tilde{x}}) q(\mathbf{x}^{(m)} \mid \mathbf{\tilde x})}{\tilde{p}(\mathbf{x}^{(m)})q(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})})\right) $$
 
-ここで、\\(\tilde{p}(\mathbf{x})\\) はサンプリングしたい分布 \\(p(\mathbf{x})\\) の非正規化確率分布
+ここで、\\(\tilde{p}(\mathbf{x})\\) はサンプリングしたい分布 \\(p(\mathbf{x})\\) の非正規化密度関数
 
 ---
 
-### Metropolis-Hastings法のアルゴリズム
+### Metropolis-Hastingsのアルゴリズム
 
 非正規化確率分布関数 \\(\tilde{p}(\mathbf{x})\\) からサンプリングする
 
-1. 初期状態 \\(\mathbf{x^{(0)}}\\) を決める
-2. 提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x^{(\tau)}})\\) から新たな点 \\(\mathbf{\tilde{x}}\\) をとる
-3. 確率 \\(A(\mathbf{\tilde{x}} \mid \mathbf{x^{(\tau)}})\\) で \\(\mathbf{\tilde{x}}\\) をサンプルとして受理し、そうでなければ棄却する
-4. 受理された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{\tilde{x}}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{x^{(\tau)}}\\) と設定する
-5. 2~4を十分なサンプルが得られるまで繰り返す
+1. 初期状態 \\(\mathbf{x}^{(0)}\\) を決め、\\(m \gets 0\\) に設定する
+2. 提案分布 \\(q(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})\\) から新たな点 \\(\mathbf{\tilde{x}}\\) をとる
+3. 確率 \\(A(\mathbf{\tilde{x}} \mid \mathbf{x}^{(m)})\\) で \\(\mathbf{\tilde{x}}\\) をサンプルとして受理し、そうでなければ棄却する
+4. 受理された場合は \\(\mathbf{x}^{(m+1)} \gets \mathbf{\tilde x}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(m + 1)} \gets \mathbf{x}^{(m)}\\) と設定する
+5. \\(m \gets m + 1\\) として、2~4を \\(M\\) 個のサンプルが得られるまで繰り返す
 
 ---
 
-### 実装
+提案分布は正規分布(`randn`)
 
 ```julia
 #  p: (unnormalized) probability density function
@@ -180,8 +200,6 @@ function metropolis(p::Function, θ₀::Vector{Float64}, M::Int, ϵ::Float64)
     samples
 end
 ```
-
-ここでは、提案分布を正規分布(`randn`)とした。
 
 ---
 
@@ -230,7 +248,12 @@ layout: true
 ---
 layout: false
 
-## Metropolis-Hastingsの問題
+### Metropolis-Hastingsの問題点
+
+1. 棄却率のトレードオフ
+    * ステップサイズ \\( \epsilon \\) の値で、棄却率と性能のトレードオフがある
+2. ランダムウォーク
+    * サンプルの列がランダムウォークをする
 
 ---
 
@@ -247,27 +270,34 @@ MCMCからなるべく独立なサンプルを得るにはステップサイズ�
 
 ---
 
-### 問題2: ランダムウォーク問題
+### 問題2: ランダムウォーク
 
-* 提案分布が提示する候補点 \\(\mathbf{\tilde{x}}\\) は、現在の値 \\(\mathbf{x^{(\tau)}}\\) からみて等方的
+Metropolis-Hastingsから得られたサンプル列は、ランダムウォークをしている
+
+* 提案分布が提示する候補点 \\(\mathbf{\tilde{x}}\\) は、現在の値 \\(\mathbf{x}^{(m)}\\) からみて等方的
+* \\(\mathbf{x}^{(m)}\\) が移動した先からすぐに戻ってきてしまうことがある
 * ランダムウォークでは(おおまかに言って)反復回数の平方根に比例した距離しか進めない
-* 確率のある空間を端から端まで渡るのにかなり反復回数が必要になる
+* 空間を端から端まで渡るのにかなり反復回数が必要になる
+
+<figure>
+    <img src="images/random_walk.svg" style="height: 200px;">
+</figure>
 
 ---
 class: center, middle
 
-# Hamiltonian Mote Carlo (HMC)
+## Hamiltonian Mote Carlo (HMC)
 
 ---
 
-## Hamiltonian Monte Carlo (HMC)
+### Hamiltonian Monte Carlo
 
 **Hamiltonian Monte Carlo法(HMC)**は、ハミルトン力学(Hamiltonian dynamics)を元に考案されたMCMC法のひとつ。
 
 * 確率密度関数の勾配を利用する (離散的な確率分布はできない)
-* 確率変数が取りうる値の空間での粒子の運動を追って、サンプルを得る
-* 他のMCMCのアルゴリズムと比較して、相関の少ない良いサンプルが得られやすい
-* この手法を発展させた**No-U-Turn Sampler**はStanというベイズ推定のためのプログラミング言語に実装されている
+* 空間での粒子の運動を追ってサンプルを得る
+* 他のMCMCのアルゴリズムと比較して、相関の少ない良いサンプルが得られる
+* この手法を発展させた**No-U-Turn Sampler (NUTS)**はStanというベイズ推定のためのプログラミング言語に実装されている
 
 ---
 
@@ -347,34 +377,32 @@ $$
 
 ---
 
-### 何故Leapfrog離散化なのか
+### なぜLeapfrog離散化なのか
 
 * 同時分布 \\(P(\mathbf{x}, \mathbf{p})\\) を不変にするためには、\\(H(\mathbf{x}, \mathbf{p})\\) の体積を不変にしなければならない
 * しかし、Euler法などでは(精度の悪さを無視しても)体積が変化してしまうので、 \\(P(\mathbf{x}, \mathbf{p})\\) が不変にならない
 * Leapfrog離散化では、3つの更新式はそれぞれ**剪断写像(shear mapping)**なので、それぞれ適用しても体積が変化しない
 
 <figure>
-    <img src="./images/shear_mapping.svg" style="height: 200px;">
-    <figcaption>剪断写像</figcaption>
-    "VerticalShear m=1.25" by RobHar - Own work using Inkscape. Licensed under Public domain via Wikimedia Commons - http://commons.wikimedia.org/wiki/File:VerticalShear_m%3D1.25.svg#mediaviewer/File:VerticalShear_m%3D1.25.svg
+    <img src="./images/shear_mapping.svg" style="height: 160px;">
 </figure>
 
+.reference["VerticalShear m=1.25" by RobHar - Own work using Inkscape. Licensed under Public domain via Wikimedia Commons - http://commons.wikimedia.org/wiki/File:VerticalShear_m%3D1.25.svg#mediaviewer/File:VerticalShear_m%3D1.25.svg]
 
 ---
 
 ### HMCによるサンプリングアルゴリズム
 
-1. 初期状態 \\(\mathbf{x^{(0)}}\\) を決める
+1. 初期状態 \\(\mathbf{x}^{(0)}\\) を決め、\\(m \gets 0\\) に設定する
 2. 運動量を正規分布などからサンプリングする
-3. \\(\mathbf{x^{(\tau)}}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\mathbf{\tilde{x}}\\) を得る
-4. 確率 \\( \alpha = \min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
-5. 受容された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{\tilde{x}}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(\tau+1)} \gets \mathbf{x^{(\tau)}}\\) と設定する
-6. 2~5を十分なサンプルが得られるまで繰り返す
+3. \\(\mathbf{x}^{(m)}\\) からステップサイズ \\(\epsilon\\) でLeapfrog離散化による更新を \\(L\\) 回繰り返し、\\(\mathbf{\tilde{x}}\\) を得る
+4. 確率 \\(\min{\left(1, \exp{\left\\{H(\mathbf{x}, \mathbf{p}) - H(\mathbf{\tilde{x}}, \mathbf{\tilde{p}})\right\\}}\right)} \\) で受理し、そうでなければ棄却する
+5. 受理された場合は \\(\mathbf{x}^{(m+1)} \gets \mathbf{\tilde{x}}\\) と設定し、棄却された場合は \\(\mathbf{x}^{(m+1)} \gets \mathbf{x}^{(m)}\\) と設定する
+6. \\(m \gets m + 1\\) として、2~5を \\(M\\) 個のサンプルが得られるまで繰り返す
 
 ---
 
-### 実装
-
+.font65[
 ```julia
 #  U : potential energy function
 # ∇U : gradient of the potential energy function
@@ -409,6 +437,7 @@ function hmc(U::Function, ∇U::Function, θ₀::Vector{Float64}, M::Int, ϵ::Fl
     samples
 end
 ```
+]
 
 ---
 layout: true
@@ -460,25 +489,27 @@ layout: true
 ---
 layout: false
 
-## HMCが解決したこと
+### HMCが解決したこと
 
-* ステップサイズ \\(\epsilon\\) を十分小さくとれば、棄却率を低く抑えられる
-* 粒子が \\(L\\) ステップ連続して系統的に移動するため、ランダムウォークと比べて遠くまで動ける
+エネルギーの勾配情報を使うことで、可能になったこと:
+
+* ステップサイズ \\(\epsilon\\) を十分小さくとればLeapfrogの積分誤差が小さくなり、棄却率を低く抑えられる
+* 粒子が \\(L\\) ステップ連続して滑らかに移動するため、ランダムウォークと比べて遠くまで動ける
 
 棄却率を抑えつつ前の位置より遠くまで動くことができるようになり、得られるサンプルが**より独立なサンプル**に近づいた。
 
 ---
 
-## HMCの難しさ
+### HMCの難しさ
 
 HMCの利点は、運動を調節する2つのパラメータ
 
 * ステップサイズ \\(\epsilon\\)
 * ステップ数 \\(L\\)
 
-の値が良い値に設定されているということに依存している。
+の値がちょうど良い値に設定されているということに依存している。
 
-先ほどのサンプリングの結果から、HMCの性能はこれらのパラメータの値に極めて過敏になっていることが分かる。
+分布の形状によってちょうど良い値が変わるため、これらの値をどんな分布にもうまくいくよう予め設定するのは不可能。
 
 ---
 
@@ -488,18 +519,22 @@ HMCの利点は、運動を調節する2つのパラメータ
 * \\(\epsilon\\) が小さすぎる ➠ 粒子があまり動かない
 * \\(\epsilon\\) が大きすぎる ➠ leapfrog離散化が荒すぎて棄却率が上がる
 
+\\(\epsilon\\) を小さくすると \\(L\\) を大きくしないといけないため、計算コストもかかる。
+
 ステップ数 \\(L\\):
 * \\(L\\) が小さすぎる ➠ ランダムウォークをしてしまう
 * \\(L\\) が大きすぎる ➠ 粒子が引き返す (Uターン)
 
+➠ 自動的にパラメータを調節したい
+
 ---
 class: center, middle
 
-# No-U-Turn Sampler (NUTS)
+## No-U-Turn Sampler (NUTS)
 
 ---
 
-## No-U-Turn Sampler
+### No-U-Turn Sampler
 
 HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つのパラメータに敏感だったが、
 **No-U-Turn Sampler (NUTS)**ではこれらのパラメータ(特に \\(L\\))をうまいこと調節してくれる。
@@ -517,9 +552,11 @@ HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つの
     <img src="images/nuts_algorithm6.png">
 </figure>
 
+.reference[Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn Sampler : Adaptively Setting Path Lengths in Hamiltonian Monte Carlo, 15, 1351–1381.]
+
 ---
 
-## NUTSの要点
+### NUTSの要点
 
 さすがに全部を紹介するのは厳しいので要点を紹介すると、
 
@@ -531,7 +568,7 @@ HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つの
 
 ---
 
-## 引き返しの基準
+### 引き返しの基準
 
 軌跡の長さの時間変化は、始点 \\(\mathbf x\\) から現在の点 \\(\mathbf{\tilde x}\\) までのベクトルと運動量ベクトル \\(\mathbf{\tilde p}\\) の積に比例する
 
@@ -541,9 +578,48 @@ $$ \frac{\mathrm d}{\mathrm d t} \frac{(\mathbf{\tilde x} - \mathbf x)^{\mathrm 
 
 ---
 
-### 実装
-
 長いので気になる方はサンプルコードのnuts.jlを参照して下さい。
+
+.font55[
+```julia
+#  L: logarithm of the joint density θ
+# ∇L: gradient of L
+# θ₀: initial state
+#  M: number of samples
+#  ϵ: step size
+function nuts(L::Function, ∇L::Function, θ₀::Vector{Float64}, M::Int, ϵ::Float64)
+    d = length(θ₀)
+    samples = Array(typeof(θ₀), M)
+    θ = θ₀
+    for m in 1:M
+        r₀ = randn(d)
+        u = rand() * exp(L(θ) - r₀ ⋅ r₀ / 2)
+        θ⁻ = θ⁺ = θ
+        r⁻ = r⁺ = r₀
+        C = Set([(θ, r₀)])
+        j = 0
+        s = 1
+        while s == 1
+            v = randbool() ? -1 : 1
+            if v == -1
+                θ⁻, r⁻, _, _, C′, s′ = build_tree(L, ∇L, θ⁻, r⁻, u, v, j, ϵ)
+            else
+                _, _, θ⁺, r⁺, C′, s′ = build_tree(L, ∇L, θ⁺, r⁺, u, v, j, ϵ)
+            end
+            if s′ == 1
+                C = C ∪ C′
+            end
+            s = s′ * ((θ⁺ - θ⁻) ⋅ r⁻ ≥ 0) * ((θ⁺ - θ⁻) ⋅ r⁺ ≥ 0)
+            j += 1
+        end
+        θ, _ = rand(C)
+        samples[m] = θ
+        print_sample(θ)
+    end
+    samples
+end
+```
+]
 
 ---
 layout: true
@@ -587,7 +663,7 @@ class: center, middle
 
 ---
 
-# まとめ
+## まとめ
 
 * HMCは粒子の運動を追跡してサンプリングすることにより、棄却率を下げられる
 * NUTSはHMCの難しいパラメータ調節を、自動化してくれる
@@ -595,11 +671,50 @@ class: center, middle
 
 ---
 
-# 参考
+## 参考
 
 * Radford M.Neal. (2011). MCMC Using Hamiltonian Dynamics. In *Handbook of Markov Chain Monte Carlo*, pp.113-162. Chapman & Hall/CRC.
 * C.M. Bishop. (2007). *Pattern Recognition and machine Learning*. Springer. (元田浩 (2012) サンプリング法 パターン認識と機械学習 下, pp.237-273. 丸善出版)
 * 豊田秀樹 (2008). マルコフ連鎖モンテカルロ法 朝倉書店
+
+---
+class: center, middle
+
+## おまけ
+
+---
+
+### Juliaのソースコードと擬似コードの異常な類似
+
+.column-left[
+.font65[
+```julia
+function build_tree(L::Function, ∇L::Function, θ::Vector{Float64}, r::Vector{Float64}, u::Float64, v::Int, j::Int, ϵ::Float64)
+    if j == 0
+        θ′, r′ = leapfrog(∇L, θ, r, v * ϵ)
+        C′ = u ≤ exp(L(θ′) - r′ ⋅ r′ / 2) ? Set([(θ′, r′)]) : Set([])
+        s′ = int(L(θ′) - r′ ⋅ r′ / 2 > log(u) - Δmax)
+        return θ′, r′, θ′, r′, C′, s′
+    else
+        θ⁻, r⁻, θ⁺, r⁺, C′, s′ = build_tree(L, ∇L, θ, r, u, v, j - 1, ϵ)
+        if v == -1
+            θ⁻, r⁻, _, _, C″, s″ = build_tree(L, ∇L, θ⁻, r⁻, u, v, j - 1, ϵ)
+        else
+            _, _, θ⁺, r⁺, C″, s″ = build_tree(L, ∇L, θ⁺, r⁺, u, v, j - 1, ϵ)
+        end
+        s′ = s′ * s″ * ((θ⁺ - θ⁻) ⋅ r⁻ ≥ 0) * ((θ⁺ - θ⁻) ⋅ r⁺ ≥ 0)
+        C′ = C′ ∪ C″
+        return θ⁻, r⁻, θ⁺, r⁺, C′, s′
+    end
+end
+```
+]
+]
+.right-column[
+<figure>
+<img src="images/build_tree.png" style="width: 350px;">
+</figure>
+]
 
 ---
 

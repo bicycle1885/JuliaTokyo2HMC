@@ -35,7 +35,6 @@ function nuts(L::Function, ∇L::Function, θ₀::Vector{Float64}, M::Int, ϵ::F
         s = 1
         while s == 1
             v = randbool() ? -1 : 1
-            #@show j, v, u, length(C)
             if v == -1
                 θ⁻, r⁻, _, _, C′, s′ = build_tree(L, ∇L, θ⁻, r⁻, u, v, j, ϵ)
             else
