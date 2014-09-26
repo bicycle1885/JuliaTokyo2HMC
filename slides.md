@@ -566,7 +566,7 @@ HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つの
     <img src="images/nuts_algorithm6.png">
 </figure>
 
-.reference[Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn Sampler : Adaptively Setting Path Lengths in Hamiltonian Monte Carlo, 15, 1351–1381.]
+.reference[(Hoffman & Gelman, 2014)]
 
 ---
 
@@ -586,11 +586,15 @@ HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つの
 
 ### No! U-Turn!!
 
-軌跡の長さの時間変化は、始点 \\(\boldsymbol \theta\\) から現在の点 \\(\boldsymbol{\tilde \theta}\\) までのベクトルと運動量ベクトル \\(\boldsymbol{\tilde r}\\) の積に比例する
+軌跡の長さの時間変化は、始点 \\(\boldsymbol \theta\\) から現在の点 \\(\boldsymbol{\tilde \theta}\\) までのベクトルと運動量ベクトル \\(\boldsymbol{\tilde r}\\) の積に比例する:
 
 $$ \frac{\mathrm d}{\mathrm d t} \frac{(\boldsymbol{\tilde \theta} - \boldsymbol \theta)^{\mathrm T}(\boldsymbol{\tilde \theta} - \boldsymbol \theta)}{2} = (\boldsymbol{\tilde \theta} - \boldsymbol \theta)^{\mathrm T} \frac{\mathrm d}{\mathrm d t}(\boldsymbol{\tilde \theta} - \boldsymbol \theta) = (\boldsymbol{\tilde \theta} - \boldsymbol \theta)^{\mathrm T}{\boldsymbol{\tilde r}} $$
 
 この値が \\(0\\) 以下になったら、軌跡がUターンをし始めたことになる。
+
+<figure>
+    <img src="images/trajectory.png" style="height: 250px;">
+</figure>
 
 ---
 
@@ -677,7 +681,7 @@ class: center, middle
     * Stanバインディング (via CmdStan)
     * そのうちMCMC.jlに取り込まれるっぽい?
 * Mamba.jl - https://github.com/brian-j-smith/Mamba.jl
-    * かなり本気っぽい純Julia製の実用的なMCMCフレームワーク
+    * かなり本気っぽいJulia製の実用的なMCMCフレームワーク
     * 充実のドキュメント
 
 ---
@@ -692,8 +696,10 @@ class: center, middle
 
 ## 参考
 
-* Radford M.Neal. (2011). MCMC Using Hamiltonian Dynamics. In *Handbook of Markov Chain Monte Carlo*, pp.113-162. Chapman & Hall/CRC.
-* C.M. Bishop. (2007). *Pattern Recognition and machine Learning*. Springer. (元田浩 (2012) サンプリング法 パターン認識と機械学習 下, pp.237-273. 丸善出版)
+* Bishop, C. M. (2006). *Pattern recognition and machine learning*. New York: springer. (元田浩 (2012) サンプリング法 パターン認識と機械学習 下, pp.237-273. 丸善出版)
+* Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn Sampler : Adaptively Setting Path Lengths in Hamiltonian Monte Carlo. *Journal of Machine Learning Research*, 15, 1351–1381.
+* MacKay, D. J. C. (2003). *Information Theory, Inference, and Learning Algorithms*. Cambridge University Press.
+* Neal, R. M. (2011). MCMC Using Hamiltonian Dynamics. In *Handbook of Markov Chain Monte Carlo*, pp.113-162. Chapman & Hall/CRC.
 * 豊田秀樹 (2008). マルコフ連鎖モンテカルロ法 朝倉書店
 
 ---
