@@ -75,6 +75,7 @@ class: center, middle
 
 ---
 class: center, middle
+background-image: url(images/mcmc.thin.png)
 
 ## マルコフ連鎖モンテカルロ法
 
@@ -137,8 +138,11 @@ $$ P(X\_{t+1} = x \mid X\_{1} = x\_{1}, \dots, X\_{t} = x\_{t}) = P(X\_{t+1} = x
 
 ---
 class: center, middle
+background-image: url(images/8537200184_ca612a1146_k.crop.thin.png)
 
 ## Metropolis-Hastings
+
+.reference[[Night View with Tokyo Tower Special Lightup <Invitation for 2020 Olympic Games> (Shibakouen, Tokyo, Japan)](https://flic.kr/p/e1pnP9) by t-mizo is licensed under [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)]
 
 ---
 
@@ -286,8 +290,11 @@ Metropolis-Hastingsから得られたサンプル列は、ランダムウォー�
 
 ---
 class: center, middle
+background-image: url(images/3086231049_1802c55986_b.thin.png)
 
 ## Hamiltonian Mote Carlo (HMC)
+
+.reference[[Hamiltonian circuit on a small rhombicosidodecahedron](https://flic.kr/p/5GHJYa) by fdecomite is licensed under [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)]
 
 ---
 
@@ -533,8 +540,11 @@ HMCの利点は、運動を調節する2つのパラメータ
 
 ---
 class: center, middle
+background-image: url(images/2620587520_8a4c0b4fea_o.crop.thin.png)
 
 ## No-U-Turn Sampler (NUTS)
+
+.reference[[No Turning Back](https://flic.kr/p/4Zzcns) by Pak Gwei is licensed under [CC BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/)]
 
 ---
 
@@ -568,11 +578,13 @@ HMCはステップサイズ \\(\epsilon\\) とステップ数 \\(L\\) の2つの
 * なので予め \\(L\\) を設定せず、軌跡をどんどん伸ばしていく
 * 伸ばしすぎて運動がUターンを始めたら、軌跡を伸ばすのを止める
 * その軌跡にあるデータ点から、新しいサンプルを得る
-* 軌跡の延長やサンプリングは、詳細釣り合いを崩さないように
+* 軌跡からのサンプリングは、詳細釣り合いを崩さないようにする
+
+.note[詳細釣り合い(detailed balance)とは、分布が不変になるための必要条件]
 
 ---
 
-### 引き返しの基準
+### No! U-Turn!!
 
 軌跡の長さの時間変化は、始点 \\(\boldsymbol \theta\\) から現在の点 \\(\boldsymbol{\tilde \theta}\\) までのベクトルと運動量ベクトル \\(\boldsymbol{\tilde r}\\) の積に比例する
 
