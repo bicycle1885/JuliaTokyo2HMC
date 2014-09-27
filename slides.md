@@ -371,11 +371,11 @@ $$ p(\boldsymbol{\theta}, \boldsymbol{r}) = \frac{1}{Z} \exp{\left(-H(\boldsymbo
 
 ### HMCの受容確率
 
-提示された候補点に関する受容[確率は以下のようになる。
+提示された候補点に関する受容確率は以下のようになる。
 
-$$ \min{\left(1, \exp{\left\\{H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}})\right\\}}\right)} $$
+$$ A(\boldsymbol{\tilde{\theta}} \mid \boldsymbol{\theta}) = \min{\left(1, \exp{\left\\{H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}})\right\\}}\right)} $$
 
-理論的には、\\(H\\) の値は**不変**なので \\( H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}}) = 0\\) ゆえ必ず受理される (\\(\alpha = 1\\)) はずだが、コンピュータで数値的にハミルトン方程式を離散化して解くと必ず誤差が発生するため現実的には棄却率は**ゼロでない**。
+理論的には、\\(H\\) の値は**不変**なので \\( H(\boldsymbol{\theta}, \boldsymbol{r}) - H(\boldsymbol{\tilde{\theta}}, \boldsymbol{\tilde{r}}) = 0\\) ゆえ必ず受理される (\\(A = 1\\)) はずだが、コンピュータで数値的にハミルトン方程式を離散化して解くと必ず誤差が発生するため現実的には棄却率は**ゼロでない**。
 
 ---
 
