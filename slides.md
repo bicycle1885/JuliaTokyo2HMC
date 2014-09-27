@@ -4,7 +4,7 @@ class: center, middle
 
 # Juliaで学ぶ<br>Hamiltonian Monte Carlo
 
-### NUTS入り
+### (NUTS入り)
 
 ** 佐藤 建太 (Kenta Sato) **
 
@@ -15,7 +15,7 @@ class: center, middle
 # コンテンツ
 
 * 自己紹介
-* マルコフ連鎖モンテカルロ法
+* マルコフ連鎖モンテカルロ法 (MCMC)
 * Metropolis-Hastings
 * Hamiltonian Monte Carlo (HMC)
 * No-U-Turn Sampler (NUTS)
@@ -57,6 +57,16 @@ class: center, middle
 
 ---
 
+### Haskellもよろしくお願いします
+
+『Haskellによる並列・並行プログラミング』の翻訳レビューをしました。
+
+<figure>
+    <img src="images/1689_prlll_cncrrnt_prg_hskll_cvr.jpg">
+</figure>
+
+---
+
 ### パッケージ紹介
 
 #### DocOpt.jl - https://github.com/docopt/DocOpt.jl
@@ -77,7 +87,7 @@ class: center, middle
 class: center, middle
 background-image: url(images/mcmc.thin.png)
 
-## マルコフ連鎖モンテカルロ法
+## マルコフ連鎖モンテカルロ法<br>(MCMC)
 
 ---
 
